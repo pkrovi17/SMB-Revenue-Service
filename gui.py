@@ -13,7 +13,7 @@ FONT = ("Segoe UI", 11)
 # Run the processing logic and exit
 def run_and_exit(path_or_url):
     show_processing_screen()
-    subprocess.run(['python', 'extract.py', path_or_url])
+    subprocess.run(['python', 'extract2.py', path_or_url])
     root.quit()
 
 def select_file():
