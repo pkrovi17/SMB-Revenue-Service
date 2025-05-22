@@ -43,7 +43,7 @@ def show_processing_screen():
 
 # --- GUI Setup ---
 root = tk.Tk()
-root.title("🧾 Financial Sheet Processor")
+root.title("Financial Sheet Processor")
 root.configure(bg=BG_COLOR)
 root.geometry("500x280")
 root.resizable(False, False)
