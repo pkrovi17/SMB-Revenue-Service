@@ -63,7 +63,7 @@ def extract_dashboard_list_with_retry(response_func, max_attempts=5):
             with open(f"llama_dashboard_attempt_{attempt + 1}.txt", "w") as f:
                 f.write(response)
 
-    print("⚠️ All attempts failed. See llama_dashboard_attempt_*.txt for details.")
+    print("All attempts failed. See llama_dashboard_attempt_*.txt for details.")
     return []
 
 
