@@ -7,36 +7,50 @@ import json5 as json  # instead of regular json
 def load_json_data(filepath="financial_output.json"):
     with open(filepath, "r") as f:
         return json.load(f)
+    
+def get_nested_value(data, path):
+    keys = path.split('.')
+    for key in keys:
+        if isinstance(data, dict):
+            data = data.get(key, None)
+        else:
+            return None
+    return data
 
 def ask_llama_for_dashboard_suggestions(json_str):
     prompt = f"""
 You are a financial dashboard assistant.
 
-Your task is to generate dashboard ideas based on JSON-formatted financial data for a small-to-medium retail business.
+Given the following variable JSON financial data from a small-to-medium business, suggest a set of dashboards.
 
-Each dashboard must include:
-- "title": short chart title
-- "description": brief explanation
-- "chart_type": one of ["bar", "line", "pie"]
+Each dashboard suggestion must include:
+- "title": A short, descriptive chart title
+- "description": Brief explanation of what the chart shows
+- "chart_type": One of ["bar", "pie", "line"]
+- "data_points": A dictionary of label → JSON path strings
+  Example: {{
+    "Revenue": "income_statement.revenue",
+    "COGS": "income_statement.cost_of_goods_sold"
+  }}
 
-Output ONLY valid JSON (an array of objects) with no commentary or Markdown. Format like this:
+Output ONLY a valid JSON list like this:
 
 [
   {{
-    "title": "Revenue vs Expenses",
-    "description": "Compare revenue to cost of goods sold and net income",
-    "chart_type": "bar"
-  }},
-  {{
-    "title": "Income Composition",
-    "description": "Breakdown of profit components",
-    "chart_type": "pie"
+    "title": "Revenue Breakdown",
+    "description": "Compare revenue to cost of goods sold",
+    "chart_type": "bar",
+    "data_points": {{
+      "Revenue": "income_statement.revenue",
+      "COGS": "income_statement.cost_of_goods_sold"
+    }}
   }}
 ]
 
 Financial data:
 {json_str}
 """
+
 
 
     result = subprocess.run(
@@ -70,36 +84,35 @@ def extract_dashboard_list_with_retry(response_func, max_attempts=5):
 def safe_value(val):
     return val if isinstance(val, (int, float)) else 0
 
-def generate_figure(title, chart_type, financial_data):
-    # Basic example for income statement metrics
-    income = financial_data.get("income_statement", {})
-    keys = ["revenue", "cost_of_goods_sold", "operating_expenses", "net_income"]
-    values = [safe_value(income.get(k)) for k in keys]
+def generate_figure(dash_config, financial_data):
+    title = dash_config["title"]
+    chart_type = dash_config["chart_type"].lower()
+    data_points = dash_config.get("data_points", {})
+
+    labels = list(data_points.keys())
+    values = [get_nested_value(financial_data, path) or 0 for path in data_points.values()]
+
+    fig = go.Figure()
 
     if chart_type == "bar":
-        return go.Figure(
-            data=[go.Bar(x=keys, y=values, marker_color="#f5c147")],
-            layout=go.Layout(title=title)
-        )
+        fig.add_trace(go.Bar(x=labels, y=values, marker_color="#f5c147"))
     elif chart_type == "pie":
-        return go.Figure(
-            data=[go.Pie(labels=keys, values=values)],
-            layout=go.Layout(title=title)
-        )
+        fig.add_trace(go.Pie(labels=labels, values=values))
     elif chart_type == "line":
-        return go.Figure(
-            data=[go.Scatter(x=keys, y=values, mode='lines+markers')],
-            layout=go.Layout(title=title)
-        )
+        fig.add_trace(go.Scatter(x=labels, y=values, mode='lines+markers'))
     else:
-        return go.Figure()
+        fig.add_trace(go.Bar(x=labels, y=values))  # fallback
+
+    fig.update_layout(title=title, template="plotly_dark", height=400)
+    return fig
+
 
 def build_dash_app(dashboards, financial_data):
     app = Dash(__name__)
     plots = []
 
     for dash in dashboards:
-        fig = generate_figure(dash["title"], dash["chart_type"].lower(), financial_data)
+        fig = generate_figure(dash, financial_data)
         plots.append(html.Div([
             html.H3(dash["title"], style={"color": "#f5c147"}),
             html.P(dash["description"], style={"color": "#cccccc"}),
