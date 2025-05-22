@@ -70,8 +70,8 @@ def main(path_or_url):
     prompt_data = format_for_prompt(data)
 
     prompt = f"""
-You are a financial assistant AI. Given the following financial data from a small-to-medium retail business,
-convert it into a structured JSON format summarizing key financial items: assets, liabilities, equity, revenue, expenses, and net income.
+You are a financial assistant AI. You cannot output any false or made up numbers. Given the following financial data from a small-to-medium retail business,
+convert it into a structured JSON format summarizing key financial items: assets, liabilities, revenue, expenses, and net income.
 
 Output only valid JSON. No explanations.
 
