@@ -10,13 +10,40 @@ def load_json_data(filepath="financial_output.json"):
         return json.load(f)
     
 def get_nested_value(data, path):
+    if isinstance(path, list):
+        # Try multiple fallback paths
+        for p in path:
+            val = get_nested_value(data, p)
+            if val is not None:
+                return val
+        return None
+
+    # Handle a single path string like "profit_margin_analysis.net_income"
     keys = path.split('.')
     for key in keys:
         if isinstance(data, dict):
             data = data.get(key, None)
         else:
             return None
-    return data
+
+    # Validate that the final resolved value is a number (int or float)
+    if isinstance(data, (int, float)):
+        return data
+    elif isinstance(data, str):
+        # Check if it's a numeric string (and possibly in parentheses for negative)
+        clean = data.replace(",", "").strip()
+        if clean.startswith("(") and clean.endswith(")"):
+            try:
+                return -float(clean[1:-1])
+            except:
+                return None
+        try:
+            return float(clean)
+        except:
+            return None
+    else:
+        return None
+
 
 def ask_llama_for_dashboard_suggestions(json_str):
     
