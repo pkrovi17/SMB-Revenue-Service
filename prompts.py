@@ -1,4 +1,5 @@
-def get_extraction_prompt(prompt_data):
+def get_extraction_prompt(prompt_data, error_message=None):
+    error_section = f"\nNote: The previous attempt failed with this parsing error:\n{error_message}\nTry to fix the JSON formatting.\n" if error_message else ""
     suggested_structure = '''
 {
   "revenue_analysis": {
@@ -28,6 +29,8 @@ convert it into a structured JSON format needed to perform:
 Extract only the necessary data for these analyses. Only extract what’s available from the data. If any field is missing, include it as 0.
 
 Please follow this suggested JSON structure exactly as a guide. Output only valid JSON — no commentary or explanation.
+Error form previous attempts:
+{error_section}
 
 Suggested structure:
 {suggested_structure}
@@ -36,7 +39,8 @@ Spreadsheet data:
 {prompt_data}
 """
 
-def get_dashboard_prompt(json_str):
+def get_dashboard_prompt(json_str, error_message=None):
+    error_section = f"\nNote: The previous attempt failed with this JSON parsing error:\n{error_message}\nPlease output valid JSON.\n" if error_message else ""
     outputFormat = """
 {
   {
@@ -46,7 +50,7 @@ def get_dashboard_prompt(json_str):
     "data_points": {
       "Revenue": "revenue_analysis.revenue"
     },
-    "insight": "Consider diversifying revenue streams to reduce risk."
+    "insight": "While revenue is stable, net income appears significantly lower, suggesting that fixed costs may be too high. Consider reducing non-essential overhead or negotiating supplier contracts to improve profitability."
   },
 }
 """
@@ -54,7 +58,7 @@ def get_dashboard_prompt(json_str):
 You are a financial dashboard AI assistant.
 Empty strings are not legal JSON5.
 Given this JSON data for a small business, generate dashboards for these **3 fixed sections**:
-
+You will generate **three high-quality dashboards** for a small business using the provided JSON data. Each one should correspond to one of the following fixed categories:
 1. Revenue Analysis
 2. Profit Margin Analysis
 3. Cost Optimization Analysis
@@ -64,7 +68,10 @@ For each, return:
 - "description"
 - "chart_type": bar, pie, or line
 - "data_points": dictionary of label → JSON path
-- "insight": 1–2 sentence suggestion on how to improve performance
+- "insight": A **detailed recommendation (2–3 sentences)** explaining what the chart reveals and **how the business can improve**. Include possible causes, corrective actions, or benchmarks where appropriate.
+
+Error form previous attempts:
+{error_section}
 
 Output format (JSON list):
 {outputFormat}

@@ -31,22 +31,26 @@ def ask_llama_for_dashboard_suggestions(json_str):
     )
     return result.stdout.decode('utf-8')
 
-def extract_dashboard_list_with_retry(response_func, max_attempts=5):
+def extract_dashboard_list_with_retry(json_str, max_attempts=5):
+    last_error = ""
     for attempt in range(max_attempts):
-        print(f"Parsing LLaMA dashboard suggestion attempt {attempt + 1}...")
-        response = response_func()
+        print(f"🔁 Parsing LLaMA dashboard suggestion attempt {attempt + 1}...")
+
+        prompt = get_dashboard_prompt(json_str, error_message=last_error if attempt > 0 else None)
+        response = ask_llama_for_dashboard_suggestions(prompt)
 
         try:
             start = response.find('[')
             end = response.rfind(']') + 1
             dashboard_json = json.loads(response[start:end])
-            return dashboard_json  #Success
+            return dashboard_json  # ✅ Success
         except Exception as e:
-            print(f"Failed to parse JSON (attempt {attempt + 1}): {e}")
+            last_error = str(e)
+            print(f"❌ Failed to parse JSON (attempt {attempt + 1}): {last_error}")
             with open(f"llama_dashboard_attempt_{attempt + 1}.txt", "w") as f:
                 f.write(response)
 
-    print("All attempts failed. See llama_dashboard_attempt_*.txt for details.")
+    print("⚠️ All attempts failed. See llama_dashboard_attempt_*.txt for details.")
     return []
 
 
@@ -101,8 +105,9 @@ def build_dash_app(dashboards, financial_data):
 def main():
     financial_data = load_json_data()
     json_str = json.dumps(financial_data, indent=2)
-    response_func = lambda: ask_llama_for_dashboard_suggestions(json_str)
-    dashboards = extract_dashboard_list_with_retry(response_func)
+    #response_func = lambda: ask_llama_for_dashboard_suggestions(json_str)
+    #dashboards = extract_dashboard_list_with_retry(response_func)
+    dashboards = extract_dashboard_list_with_retry(json_str)
 
     if dashboards:
         app = build_dash_app(dashboards, financial_data)

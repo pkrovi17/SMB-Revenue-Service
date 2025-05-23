@@ -66,39 +66,44 @@ def extract_json_from_response(response):
 def main(path_or_url):
     data = read_data(path_or_url)
     if not data:
+        print("❌ No data extracted from file.")
         return
 
     prompt_data = format_for_prompt(data)
-    base_prompt = get_extraction_prompt(prompt_data)
-
-
-    max_attempts = 5
     attempt = 0
+    max_attempts = 5
     json_data = None
+    last_error = ""
 
     print("Running LLaMA 3 via Ollama...")
     while attempt < max_attempts:
-        response = run_ollama_prompt(base_prompt)
-        json_data = extract_json_from_response(response)
+        if last_error:
+            print(f"🔁 Retrying with error feedback: {last_error}")
+            prompt = get_extraction_prompt(prompt_data, error_message=last_error)
+        else:
+            prompt = get_extraction_prompt(prompt_data)
 
-        # If we get a valid parsed JSON dict (not fallback), break loop
-        if "raw_response" not in json_data:
-            break
+        response = run_ollama_prompt(prompt)
+        try:
+            start = response.find('{')
+            end = response.rfind('}') + 1
+            json_data = json.loads(response[start:end])
+            break  # ✅ Success
+        except Exception as e:
+            last_error = str(e)
+            print(f"❌ Failed to parse JSON (attempt {attempt + 1}): {last_error}")
+            with open(f"financial_llama_fail_{attempt + 1}.txt", "w") as f:
+                f.write(response)
+            attempt += 1
 
-        print(f"❌ Failed to parse JSON on attempt {attempt + 1}. Retrying...")
-        attempt += 1
-
-    if "raw_response" in json_data:
-        print("⚠️ Failed to extract valid JSON after multiple attempts. Saving raw output.")
-        output_file = "financial_output_raw.txt"
-        with open(output_file, "w") as f:
-            f.write(json_data["raw_response"])
+    if not json_data:
+        print("⚠️ Could not parse valid JSON after retries.")
+        with open("financial_output_raw.txt", "w") as f:
+            f.write(response)
     else:
-        output_file = "financial_output.json"
-        with open(output_file, "w") as f:
+        with open("financial_output.json", "w") as f:
             json.dump(json_data, f, indent=2)
-        print(f"✅ JSON data saved to {output_file}")
-        
+        print("✅ JSON data saved to financial_output.json")
 if __name__ == "__main__":
     import sys
     if len(sys.argv) < 2:
