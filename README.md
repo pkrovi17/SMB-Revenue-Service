@@ -49,3 +49,20 @@ pip install -r requirements.txt
    - Extract and convert financials using LLaMA 3
    - Launch a dashboard viewer at http://127.0.0.1:8050
    - Display a clickable link inside the GUI
+### Option B: CLI Version (No GUI)
+```bash
+python nogui.py path/to/spreadsheet.xlsx
+# OR
+python nogui.py "https://docs.google.com/spreadsheets/d/..."
+```
+
+## Structure
+```bash
+.
+├── fullGui.py           # Unified GUI launcher
+├── extract2.py          # Spreadsheet → JSON extractor (uses LLaMA)
+├── dashboard.py         # Generates interactive dashboards from JSON
+├── prompts.py           # All LLM prompt logic (modular + self-correcting)
+├── nogui.py             # CLI launcher alternative
+├── requirements.txt     # Locked Python dependency versions
+```
