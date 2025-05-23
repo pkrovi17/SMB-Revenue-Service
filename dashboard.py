@@ -18,34 +18,38 @@ def get_nested_value(data, path):
     return data
 
 def ask_llama_for_dashboard_suggestions(json_str):
-    prompt = f"""
-You are a financial dashboard assistant.
-
-Given the following variable JSON financial data from a small-to-medium business, suggest a set of dashboards.
-
-Each dashboard suggestion must include:
-- "title": A short, descriptive chart title
-- "description": Brief explanation of what the chart shows
-- "chart_type": One of ["bar", "pie", "line"]
-- "data_points": A dictionary of label → JSON path strings
-  Example: {{
-    "Revenue": "income_statement.revenue",
-    "COGS": "income_statement.cost_of_goods_sold"
-  }}
-
-Output ONLY a valid JSON list like this:
-
-[
-  {{
-    "title": "Revenue Breakdown",
-    "description": "Compare revenue to cost of goods sold",
+    outputFormat = """
+{
+  {
+    "title": "Revenue Analysis",
+    "description": "Compare revenue over time or against targets.",
     "chart_type": "bar",
-    "data_points": {{
-      "Revenue": "income_statement.revenue",
-      "COGS": "income_statement.cost_of_goods_sold"
-    }}
-  }}
-]
+    "data_points": {
+      "Revenue": "revenue_analysis.revenue"
+    },
+    "insight": "Consider diversifying revenue streams to reduce risk."
+  },
+}
+"""
+
+    prompt = f"""
+You are a financial dashboard AI assistant.
+
+Given this JSON data for a small business, generate dashboards for these **3 fixed sections**:
+
+1. Revenue Analysis
+2. Profit Margin Analysis
+3. Cost Optimization Analysis
+
+For each, return:
+- "title"
+- "description"
+- "chart_type": bar, pie, or line
+- "data_points": dictionary of label → JSON path
+- "insight": 1–2 sentence suggestion on how to improve performance
+
+Output format (JSON list):
+{outputFormat}
 
 Financial data:
 {json_str}
@@ -116,7 +120,9 @@ def build_dash_app(dashboards, financial_data):
         plots.append(html.Div([
             html.H3(dash["title"], style={"color": "#f5c147"}),
             html.P(dash["description"], style={"color": "#cccccc"}),
-            dcc.Graph(figure=fig)
+            dcc.Graph(figure=fig),
+            html.Div(f"💡 Suggestion: {dash.get('insight', 'No insight provided.')}",
+                    style={"color": "#aaaaaa", "fontStyle": "italic", "marginTop": "10px"})
         ], style={"marginBottom": "40px"}))
 
     app.layout = html.Div(plots, style={

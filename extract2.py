@@ -71,48 +71,33 @@ def main(path_or_url):
 
     suggested_structure = '''
 {
-  "balance_sheet": {
-    "assets": {
-      "current_assets": {
-        "cash": 0,
-        "inventory": 0,
-        "accounts_receivable": 0
-      },
-      "non_current_assets": {
-        "property_plant_equipment": 0,
-        "other_assets": 0
-      },
-      "total_assets": 0
-    },
-    "liabilities": {
-      "current_liabilities": {
-        "accounts_payable": 0,
-        "short_term_loans": 0
-      },
-      "non_current_liabilities": {
-        "long_term_loans": 0
-      },
-      "total_liabilities": 0
-    },
-    "equity": {
-      "owner_equity": 0,
-      "retained_earnings": 0,
-      "total_equity": 0
-    }
+  "revenue_analysis": {
+    "revenue": 0
   },
-  "income_statement": {
+  "profit_margin_analysis": {
     "revenue": 0,
     "cost_of_goods_sold": 0,
     "gross_profit": 0,
-    "operating_expenses": 0,
     "net_income": 0
+  },
+  "cost_optimization_analysis": {
+    "operating_expenses": 0,
+    "inventory_costs": 0,
+    "logistics_costs": 0
   }
 }
+
 '''
 
     base_prompt = f"""
-You are a financial assistant AI. Given the following financial data from a small-to-medium retail business,
-convert it into a structured JSON format summarizing key financial items like assets, liabilities, equity, revenue, expenses, and net income.
+You are a financial analyst AI. Given the following spreadsheet data from a small-to-medium retail business,
+convert it into a structured JSON format needed to perform:
+
+1. Revenue analysis
+2. Profit margin analysis
+3. Cost optimization analysis
+
+Extract only the necessary data for these analyses. Only extract what’s available from the data. If any field is missing, include it as 0.
 
 Please follow this suggested JSON structure exactly as a guide. Output only valid JSON — no commentary or explanation.
 
