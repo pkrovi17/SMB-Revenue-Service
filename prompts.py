@@ -27,7 +27,10 @@ convert it into a structured JSON format needed to perform:
 3. Cost optimization analysis
 
 Extract only the necessary data for these analyses. Only extract what’s available from the data. If any field is missing, include it as 0.
-
+IMPORTANT:
+- Any value labeled with words like **\"loss\", \"negative\", \"deficit\", or parentheses like (1234)** should be interpreted as a **negative number**.
+- For example, \"Net Loss\" of 2000 should be entered as -2000.
+- Do not treat \"Loss\" values as revenue or income. Subtract them appropriately.
 Please follow this suggested JSON structure exactly as a guide. Output only valid JSON — no commentary or explanation.
 Error form previous attempts:
 {error_section}
@@ -63,7 +66,7 @@ Cost Optimization Analysis:
 - Trend Line Chart: Cost impact over time
 """
     outputFormat = """
-{
+[
   {
     "title": "Revenue Analysis",
     "description": "Compare revenue over time or against targets.",
@@ -73,7 +76,7 @@ Cost Optimization Analysis:
     },
     "insight": "While revenue is stable, net income appears significantly lower, suggesting that fixed costs may be too high. Consider reducing non-essential overhead or negotiating supplier contracts to improve profitability."
   },
-}
+]
 """
     return f"""
 You are a financial dashboard AI assistant.

@@ -42,16 +42,31 @@ def extract_dashboard_list_with_retry(json_str, max_attempts=5):
         try:
             start = response.find('[')
             end = response.rfind(']') + 1
-            dashboard_json = json.loads(response[start:end])
+            json_block = response[start:end].strip()
+
+            if not json_block:
+                raise ValueError("Received empty JSON string from LLaMA")
+
+            dashboard_json = json.loads(json_block)
+
+            # Optional: normalize if LLaMA returned a single dict
+            if isinstance(dashboard_json, dict):
+                dashboard_json = [dashboard_json]
+
+            if not isinstance(dashboard_json, list):
+                raise ValueError("Expected a list of dashboards")
+
             return dashboard_json  # ✅ Success
+
         except Exception as e:
             last_error = str(e)
             print(f"❌ Failed to parse JSON (attempt {attempt + 1}): {last_error}")
-            with open(f"llama_dashboard_attempt_{attempt + 1}.txt", "w") as f:
+            with open(f"llama_dashboard_attempt_{attempt + 1}.txt", "w", encoding="utf-8") as f:
                 f.write(response)
 
     print("⚠️ All attempts failed. See llama_dashboard_attempt_*.txt for details.")
     return []
+
 
 
 def safe_value(val):
