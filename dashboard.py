@@ -58,33 +58,92 @@ def safe_value(val):
     return val if isinstance(val, (int, float)) else 0
 
 def generate_figure(dash_config, financial_data):
+    import numpy as np
+    import pandas as pd
+
     title = dash_config["title"]
     chart_type = dash_config["chart_type"].lower()
     data_points = dash_config.get("data_points", {})
 
     labels = list(data_points.keys())
     values = [get_nested_value(financial_data, path) or 0 for path in data_points.values()]
-
     fig = go.Figure()
 
     if chart_type == "bar":
         fig.add_trace(go.Bar(x=labels, y=values, marker_color="#f5c147"))
-    elif chart_type == "pie":
-        fig.add_trace(go.Pie(labels=labels, values=values))
+
+    elif chart_type == "horizontal bar":
+        fig.add_trace(go.Bar(x=values, y=labels, orientation='h', marker_color="#f5c147"))
+
     elif chart_type == "line":
         fig.add_trace(go.Scatter(x=labels, y=values, mode='lines+markers'))
+
+    elif chart_type == "cumulative line":
+        cumulative = np.cumsum(values)
+        fig.add_trace(go.Scatter(x=labels, y=cumulative, mode='lines', name='Cumulative'))
+
+    elif chart_type == "treemap":
+        fig.add_trace(go.Treemap(labels=labels, parents=[""]*len(labels), values=values))
+
+    elif chart_type == "heatmap":
+        df = pd.DataFrame([values], columns=labels)
+        fig = go.Figure(data=go.Heatmap(z=df.values, x=labels, y=["Heatmap"], colorscale='YlOrRd'))
+
+    elif chart_type == "stacked bar":
+        fig.update_layout(barmode='stack')
+        for label, val in zip(labels, values):
+            fig.add_trace(go.Bar(name=label, x=[title], y=[val]))
+
+    elif chart_type == "stacked area":
+        for i, label in enumerate(labels):
+            fig.add_trace(go.Scatter(
+                x=[title], y=[values[i]], name=label,
+                stackgroup='one', mode='none'
+            ))
+
+    elif chart_type == "bubble":
+        sizes = [max(v, 10) for v in values]  # Avoid 0-size bubbles
+        fig.add_trace(go.Scatter(x=labels, y=values, mode='markers',
+                                marker=dict(size=sizes, color=values, showscale=True)))
+
+    elif chart_type == "waterfall":
+        fig.add_trace(go.Waterfall(
+            x=labels,
+            y=values,
+            connector={"line": {"color": "rgb(63, 63, 63)"}}
+        ))
+
+    elif chart_type == "pareto":
+        # Sort descending and compute cumulative %
+        df = pd.DataFrame({"label": labels, "value": values}).sort_values("value", ascending=False)
+        df["cum_pct"] = df["value"].cumsum() / df["value"].sum() * 100
+        fig.add_trace(go.Bar(x=df["label"], y=df["value"], name="Cost Contribution"))
+        fig.add_trace(go.Scatter(
+            x=df["label"], y=df["cum_pct"],
+            yaxis="y2", name="Cumulative %",
+            mode="lines+markers", marker=dict(color="red")
+        ))
+        fig.update_layout(
+            yaxis2=dict(overlaying="y", side="right", title="Cumulative %"),
+            barmode="group"
+        )
+
+    elif chart_type == "box plot":
+        fig.add_trace(go.Box(y=values, name=title))
+
     else:
         fig.add_trace(go.Bar(x=labels, y=values))  # fallback
 
     fig.update_layout(title=title, template="plotly_dark", height=400)
     return fig
 
-
 def build_dash_app(dashboards, financial_data):
     app = Dash(__name__)
     plots = []
-
     for dash in dashboards:
+        if not isinstance(dash, dict):
+            print(f"⚠️ Skipping invalid dashboard entry: {dash}")
+            continue
         fig = generate_figure(dash, financial_data)
         plots.append(html.Div([
             html.H3(dash["title"], style={"color": "#f5c147"}),

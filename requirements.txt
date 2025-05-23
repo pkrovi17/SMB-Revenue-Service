@@ -1,0 +1,15 @@
+# Core data handling
+pandas==2.2.2
+openpyxl==3.1.2
+json5==0.9.14
+
+# LLM interface via subprocess (no external lib needed)
+
+# GUI (tkinter is built-in for most Python installs)
+
+# Web dashboard
+dash==2.15.0
+plotly==5.21.0
+
+# Optional: used for Google Sheets CSV download
+requests==2.31.0

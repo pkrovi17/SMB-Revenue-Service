@@ -41,6 +41,27 @@ Spreadsheet data:
 
 def get_dashboard_prompt(json_str, error_message=None):
     error_section = f"\nNote: The previous attempt failed with this JSON parsing error:\n{error_message}\nPlease output valid JSON.\n" if error_message else ""
+    chart_guide = """
+Revenue Analysis:
+- Line Chart: Revenue over time (monthly, yearly)
+- Bar Chart: Revenue per product/category/store
+- Treemap: Revenue share by region/product
+- Heatmap: Revenue per day/hour (e.g., retail footfall)
+- Cumulative Line: Year-to-date revenue progression
+
+Profit Margin Analysis:
+- Stacked Bar Chart: Revenue vs. cost vs. profit
+- Line Chart: Profit margin percent over time
+- Waterfall Chart: How revenue becomes net profit
+- Bubble Chart: Margin % vs. revenue size
+
+Cost Optimization Analysis:
+- Pareto Chart: Which costs dominate (80/20 rule)
+- Stacked Area Chart: Cost components over time
+- Horizontal Bar: Costs by department/vendor
+- Box Plot: Cost variance (outliers)
+- Trend Line Chart: Cost impact over time
+"""
     outputFormat = """
 {
   {
@@ -62,12 +83,13 @@ You will generate **three high-quality dashboards** for a small business using t
 1. Revenue Analysis
 2. Profit Margin Analysis
 3. Cost Optimization Analysis
-
+For each, choose the best-fitting chart type using this guide:
+{chart_guide}
 For each, return:
-- "title"
-- "description"
-- "chart_type": bar, pie, or line
-- "data_points": dictionary of label → JSON path
+- "title": short chart name
+- "description": what it shows
+- "chart_type": use only the chart types listed above
+- "data_points": dictionary of label → JSON path (you may create simplified labels)
 - "insight": A **detailed recommendation (2–3 sentences)** explaining what the chart reveals and **how the business can improve**. Include possible causes, corrective actions, or benchmarks where appropriate.
 
 Error form previous attempts:
