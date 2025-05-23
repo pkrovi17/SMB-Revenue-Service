@@ -34,3 +34,18 @@ ollama pull llama3
 ```
 Make sure it is in your system path.
 
+### 3. Install Required Python Packages
+From the project root:
+
+```bash
+pip install -r requirements.txt
+```
+
+## Usage
+
+### Option A: Full GUI App (Recommended)
+1. Select a .csv, .xlsx, or Google Sheets URL
+2. It will:
+   - Extract and convert financials using LLaMA 3
+   - Launch a dashboard viewer at http://127.0.0.1:8050
+   - Display a clickable link inside the GUI
