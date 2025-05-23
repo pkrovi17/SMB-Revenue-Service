@@ -2,6 +2,7 @@ import pandas as pd
 import json
 import os
 import subprocess
+from prompts import get_extraction_prompt
 
 def read_data(file_path_or_url):
     """
@@ -68,45 +69,7 @@ def main(path_or_url):
         return
 
     prompt_data = format_for_prompt(data)
-
-    suggested_structure = '''
-{
-  "revenue_analysis": {
-    "revenue": 0
-  },
-  "profit_margin_analysis": {
-    "revenue": 0,
-    "cost_of_goods_sold": 0,
-    "gross_profit": 0,
-    "net_income": 0
-  },
-  "cost_optimization_analysis": {
-    "operating_expenses": 0,
-    "inventory_costs": 0,
-    "logistics_costs": 0
-  }
-}
-
-'''
-
-    base_prompt = f"""
-You are a financial analyst AI. Given the following spreadsheet data from a small-to-medium retail business,
-convert it into a structured JSON format needed to perform:
-
-1. Revenue analysis
-2. Profit margin analysis
-3. Cost optimization analysis
-
-Extract only the necessary data for these analyses. Only extract what’s available from the data. If any field is missing, include it as 0.
-
-Please follow this suggested JSON structure exactly as a guide. Output only valid JSON — no commentary or explanation.
-
-Suggested structure:
-{suggested_structure}
-
-Spreadsheet data:
-{prompt_data}
-"""
+    base_prompt = get_extraction_prompt(prompt_data)
 
 
     max_attempts = 5

@@ -3,6 +3,7 @@ import subprocess
 import plotly.graph_objs as go
 from dash import Dash, html, dcc
 import json5 as json  # instead of regular json
+from prompts import get_dashboard_prompt
 
 def load_json_data(filepath="financial_output.json"):
     with open(filepath, "r") as f:
@@ -18,45 +19,9 @@ def get_nested_value(data, path):
     return data
 
 def ask_llama_for_dashboard_suggestions(json_str):
-    outputFormat = """
-{
-  {
-    "title": "Revenue Analysis",
-    "description": "Compare revenue over time or against targets.",
-    "chart_type": "bar",
-    "data_points": {
-      "Revenue": "revenue_analysis.revenue"
-    },
-    "insight": "Consider diversifying revenue streams to reduce risk."
-  },
-}
-"""
-
-    prompt = f"""
-You are a financial dashboard AI assistant.
-
-Given this JSON data for a small business, generate dashboards for these **3 fixed sections**:
-
-1. Revenue Analysis
-2. Profit Margin Analysis
-3. Cost Optimization Analysis
-
-For each, return:
-- "title"
-- "description"
-- "chart_type": bar, pie, or line
-- "data_points": dictionary of label → JSON path
-- "insight": 1–2 sentence suggestion on how to improve performance
-
-Output format (JSON list):
-{outputFormat}
-
-Financial data:
-{json_str}
-"""
-
-
-
+    
+    prompt = get_dashboard_prompt(json_str)
+    
     result = subprocess.run(
         ['ollama', 'run', 'llama3'],
         input=prompt.encode('utf-8'),
