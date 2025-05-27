@@ -3,7 +3,7 @@ import subprocess
 import plotly.graph_objs as go
 from dash import Dash, html, dcc
 import json5 as json  # instead of regular json
-from prompts import get_dashboard_prompt
+from prompts import get_dashboard_prompt, get_timeseries_prompt
 from forecast3 import prepare_prophet_input, forecast_timeseries
 
 def load_json_data(filepath="financial_output.json"):
@@ -74,13 +74,21 @@ def build_dash_app(dashboards, financial_data):
     if prophet_input:
         forecast_fig, forecast_df = forecast_timeseries(prophet_input, field_name="Revenue")
         fig = go.Figure()
+        fig.add_trace(go.Scatter(x=forecast_df["ds"], y=forecast_df["yhat_lower"], mode='lines', name='Lower Bound', line=dict(dash='dot')))
+        fig.add_trace(go.Scatter(x=forecast_df["ds"], y=forecast_df["yhat_upper"], mode='lines', name='Upper Bound', line=dict(dash='dot')))
         fig.add_trace(go.Scatter(x=forecast_df["ds"], y=forecast_df["yhat"], mode='lines+markers', name='Forecast'))
-        fig.update_layout(title="📈 Revenue Forecast", template="plotly_dark", height=400)
+        fig.update_layout(
+            title="📈 Forecasted Monthly Revenue or SKU Trends",
+            template="plotly_dark",
+            height=450,
+            xaxis_title="Month",
+            yaxis_title="Forecasted Value (Revenue or Units)"
+        )
 
         plots.append(html.Div([
-            html.H3("📈 Revenue Forecast", style={"color": "#f5c147"}),
+            html.H3("📈 Prophet Forecast Output", style={"color": "#f5c147"}),
             dcc.Graph(figure=fig),
-            html.P("Projected revenue for upcoming months based on historical trends.", style={"color": "#cccccc"})
+            html.P("This forecast uses historical data of revenue, SKUs, or units sold to project trends with confidence bounds. Labels may include specific products or categories.", style={"color": "#cccccc"})
         ]))
 
     app.layout = html.Div(plots, style={

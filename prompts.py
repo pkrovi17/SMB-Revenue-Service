@@ -119,14 +119,35 @@ def get_timeseries_prompt(prompt_data, field_name="Revenue", error_message=None)
   }
 }
 """
-    return f"""You are a data extraction AI. Do not include any explanation, comments, or notes in your answer.
-Given spreadsheet data from a business, extract a time series in this format:
+    outputFormat2 = """
+{
+  {
+    "sku_forecast": {
+      "Product A": {
+        "2023-01": 120,
+        "2023-02": 140
+      },
+      "Product B": {
+        "2023-01": 80,
+        "2023-02": 95
+      }
+    }
+  }
+}
+"""
+    return f"""
+You are a data extraction AI. Given spreadsheet data from a business, extract a time series in one of the following formats:
 
+If the spreadsheet contains only total revenue or units sold per date, extract this format:
 {outputFormat}
-Only return monthly data. The keys must be valid YYYY-MM JSON format.
-If any month is missing, skip it.
-Assume the column named "Date" or similar is the timestamp, and "{field_name}" is the value to extract.
 
+If the spreadsheet contains breakdowns by SKU, product, or category, extract in this format:
+{outputFormat2}
+
+- The keys must use YYYY-MM format. Skip months with no data.
+- Use the most relevant value column such as "Revenue", "Units Sold", or "Qty".
+- Try to normalize SKUs or product labels to short names if possible.
+Super important: Extract only the necessary data for these analyses. Only extract what’s available from the data. Do not include any explanation, comments, or notes in your answer.
 {error_section}
 
 Spreadsheet data:
