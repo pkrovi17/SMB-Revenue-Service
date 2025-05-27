@@ -26,7 +26,8 @@ convert it into a structured JSON format needed to perform:
 2. Profit margin analysis
 3. Cost optimization analysis
 
-Extract only the necessary data for these analyses. Only extract what’s available from the data. If any field is missing, include it as 0.
+Extract only the necessary data for these analyses. Only extract what’s available from the data. Do not include any explanation, comments, or notes in your answer.
+If any field is missing, include it as 0.
 IMPORTANT:
 - Any value labeled with words like **\"loss\", \"negative\", \"deficit\", or parentheses like (1234)** should be interpreted as a **negative number**.
 - For example, \"Net Loss\" of 2000 should be entered as -2000.
@@ -106,19 +107,23 @@ Financial data:
 """
 def get_timeseries_prompt(prompt_data, field_name="Revenue", error_message=None):
     error_section = f"\nNote: Previous attempt failed:\n{error_message}\nPlease fix the formatting.\n" if error_message else ""
+    outputFormat = """
+{
+  {
+    "revenue_analysis": {
+      "revenue_by_month": {
+        "2023-01": 5000,
+        "2023-02": 6000
+      }
+    }
+  }
+}
+"""
+    return f"""You are a data extraction AI. Do not include any explanation, comments, or notes in your answer.
+Given spreadsheet data from a business, extract a time series in this format:
 
-    return f"""You are a data extraction AI. Given spreadsheet data from a business, extract a time series in this format:
-
-{{
-  "revenue_analysis": {{
-    "revenue_by_month": {{
-      "2023-01": 5000,
-      "2023-02": 6000
-    }}
-  }}
-}}
-
-⚠️ Only return monthly data. The keys must be valid YYYY-MM format.
+{outputFormat}
+Only return monthly data. The keys must be valid YYYY-MM JSON format.
 If any month is missing, skip it.
 Assume the column named "Date" or similar is the timestamp, and "{field_name}" is the value to extract.
 
