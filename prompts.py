@@ -104,3 +104,26 @@ Output format (JSON list):
 Financial data:
 {json_str}
 """
+def get_timeseries_prompt(prompt_data, field_name="Revenue", error_message=None):
+    error_section = f"\nNote: Previous attempt failed:\n{error_message}\nPlease fix the formatting.\n" if error_message else ""
+
+    return f"""You are a data extraction AI. Given spreadsheet data from a business, extract a time series in this format:
+
+{{
+  "revenue_analysis": {{
+    "revenue_by_month": {{
+      "2023-01": 5000,
+      "2023-02": 6000
+    }}
+  }}
+}}
+
+⚠️ Only return monthly data. The keys must be valid YYYY-MM format.
+If any month is missing, skip it.
+Assume the column named "Date" or similar is the timestamp, and "{field_name}" is the value to extract.
+
+{error_section}
+
+Spreadsheet data:
+{prompt_data}
+"""
