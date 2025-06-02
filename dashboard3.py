@@ -80,13 +80,27 @@ def build_dash_app(dashboards, financial_data):
         forecast_result = forecast_timeseries(prophet_input, field_name="Revenue")
         if forecast_result is not None:
             forecast_fig, forecast_df = forecast_result
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(x=forecast_df["ds"], y=forecast_df["yhat_lower"], mode='lines', name='Lower Bound', line=dict(dash='dot')))
+            fig.add_trace(go.Scatter(x=forecast_df["ds"], y=forecast_df["yhat_upper"], mode='lines', name='Upper Bound', line=dict(dash='dot')))
+            fig.add_trace(go.Scatter(x=forecast_df["ds"], y=forecast_df["yhat"], mode='lines+markers', name='Forecast'))
+
+            fig.update_layout(
+                title="📈 Forecasted Monthly Revenue or SKU Trends",
+                template="plotly_dark",
+                height=450,
+                xaxis_title="Month",
+                yaxis_title="Forecasted Value (Revenue or Units)"
+            )
+
             plots.append(html.Div([
                 html.H3("📈 Prophet Forecast Output", style={"color": "#f5c147"}),
-                dcc.Graph(figure=forecast_fig),
-                html.P("This forecast uses historical data of revenue, SKUs, or units sold to project trends with confidence bounds.", style={"color": "#cccccc"})
+                dcc.Graph(figure=fig),
+                html.P("This forecast uses historical data of revenue, SKUs, or units sold to project trends with confidence bounds. Labels may include specific products or categories.", style={"color": "#cccccc"})
             ]))
-    else:
-        print("⚠️ No forecast generated (likely due to missing or insufficient data).")
+        else:
+            print("⚠️ No forecast generated (likely due to missing or insufficient data).")
+
 
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=forecast_df["ds"], y=forecast_df["yhat_lower"], mode='lines', name='Lower Bound', line=dict(dash='dot')))
