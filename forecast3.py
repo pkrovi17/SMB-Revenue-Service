@@ -1,7 +1,7 @@
 from prophet import Prophet
 import pandas as pd
 import plotly.graph_objs as go
-from utils import get_nested_value
+from util3 import get_nested_value
 
 def prepare_prophet_input(financial_data, path="revenue_analysis.revenue_by_month"):
     # Supports both flat and SKU-labeled time series
