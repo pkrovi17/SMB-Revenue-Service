@@ -1,6 +1,6 @@
 
 import pandas as pd
-import json
+import json5 as json
 import os
 import subprocess
 from prompts import get_extraction_prompt, get_timeseries_prompt
@@ -86,9 +86,15 @@ def extract_timeseries_json_with_llm(data_dict, column_date='Date', column_value
         prompt = get_timeseries_prompt(prompt_data, field_name=column_value, error_message=last_error if attempt > 0 else None)
         response = run_ollama_prompt(prompt)
         try:
-            start = response.find('{')
-            end = response.rfind('}') + 1
-            json_data = json.loads(response[start:end])
+            # Remove Markdown code fences if present
+            clean = response.strip()
+            if clean.startswith("```"):
+                clean = clean.split("```")[1].strip()
+                if clean.startswith("json"):
+                    clean = clean[4:].strip()
+            start = clean.find('{')
+            end = clean.rfind('}') + 1
+            json_data = json.loads(clean[start:end])
             break
         except Exception as e:
             last_error = str(e)

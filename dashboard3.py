@@ -5,8 +5,11 @@ from dash import Dash, html, dcc
 import json5 as json  # instead of regular json
 from prompts import get_dashboard_prompt, get_timeseries_prompt
 from forecast3 import prepare_prophet_input, forecast_timeseries
+import os
 
 def load_json_data(filepath="financial_output.json"):
+    if not os.path.exists(filepath):
+        raise FileNotFoundError(f"File {filepath} not found. Run extract2.py first.")
     with open(filepath, "r") as f:
         return json.load(f)
     
@@ -30,6 +33,8 @@ def extract_dashboard_list_with_retry(json_str, max_attempts=5):
         prompt = get_dashboard_prompt(json_str, error_message=last_error if attempt > 0 else None)
         response = ask_llama_for_dashboard_suggestions(prompt)
         try:
+            if not response.strip().lstrip().startswith("{") and "[" not in response:
+                raise ValueError("Response doesn't look like JSON")
             start = response.find('[')
             end = response.rfind(']') + 1
             json_block = response[start:end].strip()
@@ -72,7 +77,17 @@ def build_dash_app(dashboards, financial_data):
     # Add Prophet forecast if available
     prophet_input = prepare_prophet_input(financial_data)
     if prophet_input:
-        forecast_fig, forecast_df = forecast_timeseries(prophet_input, field_name="Revenue")
+        forecast_result = forecast_timeseries(prophet_input, field_name="Revenue")
+        if forecast_result is not None:
+            forecast_fig, forecast_df = forecast_result
+            plots.append(html.Div([
+                html.H3("📈 Prophet Forecast Output", style={"color": "#f5c147"}),
+                dcc.Graph(figure=forecast_fig),
+                html.P("This forecast uses historical data of revenue, SKUs, or units sold to project trends with confidence bounds.", style={"color": "#cccccc"})
+            ]))
+    else:
+        print("⚠️ No forecast generated (likely due to missing or insufficient data).")
+
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=forecast_df["ds"], y=forecast_df["yhat_lower"], mode='lines', name='Lower Bound', line=dict(dash='dot')))
         fig.add_trace(go.Scatter(x=forecast_df["ds"], y=forecast_df["yhat_upper"], mode='lines', name='Upper Bound', line=dict(dash='dot')))

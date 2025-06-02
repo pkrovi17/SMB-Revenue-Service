@@ -89,12 +89,15 @@ You will generate **three high-quality dashboards** for a small business using t
 3. Cost Optimization Analysis
 For each, choose the best-fitting chart type using this guide:
 {chart_guide}
-For each, return:
+❌ DO NOT include any introductions, bullet points, titles, commentary, or markdown.
+✅ Your entire response must be a valid JSON list: [{{...}}, {{...}}, ...]
+
+Each object should have:
 - "title": short chart name
 - "description": what it shows
-- "chart_type": use only the chart types listed above
-- "data_points": dictionary of label → JSON path (you may create simplified labels)
-- "insight": A **detailed recommendation (2–3 sentences)** explaining what the chart reveals and **how the business can improve**. Include possible causes, corrective actions, or benchmarks where appropriate.
+- "chart_type": one of: line, bar, treemap, bubble, waterfall, heatmap, horizontal bar, etc.
+- "data_points": label → JSON path (e.g., "Revenue": "revenue_analysis.revenue")
+- "insight": a recommendation (2–3 sentences) about what the chart shows and how to improve
 
 Error form previous attempts:
 {error_section}
@@ -121,33 +124,36 @@ def get_timeseries_prompt(prompt_data, field_name="Revenue", error_message=None)
 """
     outputFormat2 = """
 {
-  {
-    "sku_forecast": {
-      "Product A": {
-        "2023-01": 120,
-        "2023-02": 140
-      },
-      "Product B": {
-        "2023-01": 80,
-        "2023-02": 95
-      }
+  "sku_forecast": {
+    "PRODUCT NAME A": {
+      "2022-07": 152.30,
+      "2022-08": 98.00
+    },
+    "PRODUCT NAME B": {
+      "2022-07": 240.75
     }
   }
 }
 """
     return f"""
-You are a data extraction AI. Given spreadsheet data from a business, extract a time series in one of the following formats:
+You are a financial data extraction AI.
 
-If the spreadsheet contains only total revenue or units sold per date, extract this format:
-{outputFormat}
+Given a sales spreadsheet with rows for **individual transactions** that include:
+- product name or SKU
+- quantity sold
+- price per unit (sometimes written with currency symbols or commas)
+- a timestamp (e.g., date of transaction)
 
-If the spreadsheet contains breakdowns by SKU, product, or category, extract in this format:
+Your task is to output a **monthly time series of total revenue per product** in this format:
 {outputFormat2}
+Do not include any explanation, comments, or notes in your answer.
+Notes:
+- Compute revenue = quantity × price
+- Price may be a string like `"1,20 €"` — convert it to float
+- Timestamps should be grouped by **month** using YYYY-MM
+- If no date or revenue is available, skip that row
+- Skip SKUs with no sales
 
-- The keys must use YYYY-MM format. Skip months with no data.
-- Use the most relevant value column such as "Revenue", "Units Sold", or "Qty".
-- Try to normalize SKUs or product labels to short names if possible.
-Super important: Extract only the necessary data for these analyses. Only extract what’s available from the data. Do not include any explanation, comments, or notes in your answer.
 {error_section}
 
 Spreadsheet data:

@@ -13,6 +13,18 @@ def prepare_prophet_input(financial_data, path="revenue_analysis.revenue_by_mont
                     result[sku] = [{"ds": k, "y": float(v)} for k, v in series.items()]
                 except Exception as e:
                     print(f"SKU {sku} parsing failed: {e}")
+
+        # ✅ Also populate flat revenue_by_month for compatibility with LLaMA dashboards
+        flat_series = {}
+        for sku_data in result.values():
+            for entry in sku_data:
+                month = entry["ds"][:7]  # Extract YYYY-MM
+                flat_series[month] = flat_series.get(month, 0) + entry["y"]
+
+        financial_data["revenue_analysis"] = {
+            "revenue_by_month": flat_series
+        }
+
         return result if result else None
 
     # Fallback to flat time series (monthly revenue)
@@ -25,7 +37,8 @@ def prepare_prophet_input(financial_data, path="revenue_analysis.revenue_by_mont
         print(f"Error formatting revenue for Prophet: {e}")
         return None
 
-def forecast_timeseries(data, field_name="revenue", periods=12, freq="M"):
+
+def forecast_timeseries(data, field_name="revenue", periods=12, freq="MS"):
     def build_forecast_fig(df, forecast):
         fig = go.Figure()
         fig.add_trace(go.Scatter(
@@ -57,6 +70,10 @@ def forecast_timeseries(data, field_name="revenue", periods=12, freq="M"):
             df.columns = ['ds', 'y']
             df['ds'] = pd.to_datetime(df['ds'])
             model = Prophet()
+            if df.dropna().shape[0] < 2:
+                print(f"⚠️ Skipping SKU '{field_name}' — not enough data.")
+                return None
+
             model.fit(df)
             future = model.make_future_dataframe(periods=periods, freq=freq)
             forecast = model.predict(future)
@@ -69,6 +86,10 @@ def forecast_timeseries(data, field_name="revenue", periods=12, freq="M"):
         df.columns = ['ds', 'y']
         df['ds'] = pd.to_datetime(df['ds'])
         model = Prophet()
+        if df.dropna().shape[0] < 2:
+            print(f"⚠️ Skipping SKU '{field_name}' — not enough data.")
+            return None
+
         model.fit(df)
         future = model.make_future_dataframe(periods=periods, freq=freq)
         forecast = model.predict(future)
