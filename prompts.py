@@ -112,11 +112,24 @@ def get_timeseries_prompt(prompt_data, field_name="Revenue", error_message=None)
     error_section = f"\nNote: Previous attempt failed:\n{error_message}\nPlease fix the formatting.\n" if error_message else ""
     outputFormat = """
 {
-  {
-    "revenue_analysis": {
-      "revenue_by_month": {
-        "2023-01": 5000,
-        "2023-02": 6000
+  "sku_forecast": {
+    "SKU Name A": {
+      "2023-01": {
+        "units": 120,
+        "price": 2.50,
+        "cost": 1.80
+      },
+      "2023-02": {
+        "units": 135,
+        "price": 2.50,
+        "cost": 1.80
+      }
+    },
+    "SKU Name B": {
+      "2023-01": {
+        "units": 80,
+        "price": 3.00,
+        "cost": 2.00
       }
     }
   }
@@ -145,7 +158,7 @@ Given a sales spreadsheet with rows for **individual transactions** that include
 - a timestamp (e.g., date of transaction)
 
 Your task is to output a **monthly time series of total revenue per product** in this format:
-{outputFormat2}
+{outputFormat}
 Do not include any explanation, comments, or notes in your answer.
 Notes:
 - Compute revenue = quantity × price
@@ -153,7 +166,9 @@ Notes:
 - Timestamps should be grouped by **month** using YYYY-MM
 - If no date or revenue is available, skip that row
 - Skip SKUs with no sales
-
+✅ Use exact format above.
+✅ Use default 1.0 for missing units.
+✅ Round all values to 2 decimal places.
 {error_section}
 
 Spreadsheet data:
