@@ -7,12 +7,14 @@ Upload your financial spreadsheet or Google Sheet, and get a structured, interac
 
 ## Features
 
-- **Smart Data Extraction**: Parses revenue, cost, and margin data from Excel, CSV, or Google Sheets using LLaMA 3.
+- **Smart Data Extraction**: Parses revenue, cost, and margin data from Excel, CSV, or Google Sheets using LLaMA 3 for use in Prophet/LLama forecast.
+- **Data Prediction and TimeSeries Detection**: Looks for time series aggregate data and predicts future revenue, earnings, and other financial indicators. 
 - **Dashboards with Insights**: Generates dashboards for:
   - Revenue Analysis
   - Profit Margin Analysis
   - Cost Optimization
 - **LLM Suggestions**: Includes detailed improvement advice beneath each chart.
+- **Prophet Suggestions**: Includes detailed improvement advice based on future forecast determined by prophet.
 - **Dark-Themed GUI**: Built with tkinter + Plotly Dash.
 - **Automatic Error Recovery**: If the LLM returns invalid JSON, the system retries and improves the prompt using error feedback.
 
