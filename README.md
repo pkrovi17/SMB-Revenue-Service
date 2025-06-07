@@ -1,7 +1,7 @@
 # SMB-Revenue-Service
 
 A local AI-powered financial dashboard builder for small-to-medium businesses. 
-Upload your financial spreadsheet or Google Sheet, and get a structured, interactive dashboard powered by LLaMA 3 via Ollama — with actionable insights and visualized metrics.
+Upload your financial spreadsheet or Google Sheet, and get a structured, interactive dashboard powered by Prophet and LLaMA 3 via Ollama — with actionable insights and visualized metrics.
 
 ---
 
